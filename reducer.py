@@ -1,39 +1,44 @@
 #!/usr/bin/python
 
 import sys
-import re
+import logging
+import os
+
+import mapred_shared
+
 
 
 """ Hadoop Reducer
 Pipe in crime_data from Mapper in this fmt:
-2012-01:e01029328:burglary      1
-2012-01:e01029328:damage_or_arson       1
-2012-01:e01029328:damage_or_arson       1
-2012-01:e01029328:vehicle_crime 1
-2012-01:e01029338:burglary      1
+2012-01:e01029293       damage_or_arson
+2012-01:e01029293       drugs
+2012-01:e01029293       drugs
+2012-01:e01029293       other_theft
+2012-01:e01029293       unclassified
+2012-01:e01029293       unclassified
+2012-01:e01029293       unclassified
+2012-01:e01029293       other_crime
+2012-01:e01029266       social
+2012-01:e01029266       damage_or_arson
+2012-01:e01029284       social
 
-MAPPER is written so no ":" in free text ... we use this as a key separator in
+MAPPER is written so no ":" in free text ... we use this as a key sub-divide in
 REDUCER logic
 
-KEY = month:lsoa_code:crime
-VALUE = count (of crimes in the LSOA, for that month, of that type)
+KEY = month:lsoa_code
+VALUE = crime class
 
-...and summarise it
+Count up the crimes by class and summarise by the key:
+DATE,    LSOA     , crime[0], crime[1], crime[2], crime[3]....crime[n]
+2012-01, e01029293, 1       , 2       , 0       , 0   ...     4
 
 """
 
-def printv(text):
-    """
-    Very basic print-line for version 2 / 3 compatibility
-    """
-    text += "\n"
-    sys.stdout.write(text)
+#def init_crimes(crimes):
+#    crimes = {"bicycle_theft": 0, "social": 0, "burglary": 0, "damage_or_arson": 0, "drugs": 0, "other_theft": 0, "weapons": 0, "public_order": 0, "shoplifting": 0, "robbery":0, "theft_person": 0, "vehicle_crime": 0, "violence_sex": 0, "other_crime": 0}
+#    return(crimes)
 
-def init_crimes(crimes):
-    crimes = {"bicycle_theft": 0, "social": 0, "burglary": 0, "damage_or_arson": 0, "drugs": 0, "other_theft": 0, "weapons": 0, "public_order": 0, "shoplifting": 0, "robbery":0, "theft_person": 0, "vehicle_crime": 0, "violence_sex": 0, "other_crime": 0}
-    return(crimes)
-
-def print_output(subkey, crimes):
+def print_output(key, crimes):
     text = ""
     for crime in sorted(crimes):
         text += str(crimes[crime])
@@ -41,76 +46,99 @@ def print_output(subkey, crimes):
     if len(text) > 0:
         if text[-1] == "," : text = text[:-1]   # remove the trailing comma
     #DEBUG print sorted(crimes)# print len(crimes)
-    printv(",".join(subkey) + "," + text)
+    mapred_shared.printout(",".join(key) + "," + text)
 
-def print_header(subkey, crimes):
+def print_header(crimes):
     text = ""
-    for key in sorted(crimes):
-        text += key
+    for a in sorted(crimes):
+        text += a
         text += ","   # add a comma separator
     if len(text) > 0:
         if text[-1] == "," : text = text[:-1]   # remove the trailing comma
-    printv("month" + "," + "lsoa" +  "," + text)
- 
+    mapred_shared.printout("month" + "," + "lsoa" +  "," + text)    
+
 
 # Main #
+pid = str(os.getpid())
+i = 0
+j = 0
+
+# Logging #
+logging.basicConfig(filename='/tmp/reducer.log',
+                    level=logging.INFO, 
+                    format='%(asctime)s %(levelname)s %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S')
+
+logging.info("----------Start  PID=%s-------------------", pid)
+logging.info("|")
+###########
 
 
-log = open("/tmp/reducer.log", "a")
-
-crimes = {}  # dict to store crimetype : count
 crime = ""   # crime type being processed
-crimes = init_crimes(crimes)
+crimes = mapred_shared.init_crimes()   # dictionary of crime-counts
+key = []
+lastkey = []
 
-subkey = []  # split out the month,lsoa part as a "sub-key" 
-             # then we print out the 13 crime categories and pivot them as 
-             # as summary when we hit the next primary key
-
-log.write("\n----------------------------------")
-             
+#subkey = []  # split the key into month,lsoa parts as a "sub-key" 
+            
+      
 try:
 
-    #print_header(subkey, crimes)
     for line in sys.stdin:
+        i += 1
         line = line.strip()
-    
-        key,value = line.split("\t")
-        key = key.split(":")  # list with [0,1,2] elements
-        value = int(value)   # value is always going to be "1"?
-    
-        if not subkey:         # if subkey is null, initialise it
-            subkey = key[0:2]  # should only happen at start
-    
-        crime = key[2] 
-        # this IF-switch only works because Hadoop sorts map output by key before it is passed to the reducer
-        if "".join(subkey) == "".join(key[0:2]):  # while the sub-key is the sam  as latest key,
-                                                  # count up the crimes by type
-            crimes[crime] = crimes.get(crime,0) + value # add "value" to crimes dict ref'd for this crime type
-            subkey = key[0:2] # set sub-key
-        else:                                    # We've hit a condition where sub-key schanges
-                                                 # print out summary results for this sub-key
+        
+        key,crime = line.split("\t")
+        key = key.split(":")  # list with [0,1] elements
+        
+        if i == 1:
+            logging.info("| First key-item is %s", ":".join(key))
             
-            # if we hit subkey != key, print out totals for crime for last subkey (date:lsoa)
-            print_output(subkey, crimes)
+        if not lastkey:         # if lastkey is null, initialise it
+            lastkey = key       # should only happen at start
+    
+        # this IF-switch only works because Hadoop sorts map output by key before passing to reducer
+        if "".join(key) == "".join(lastkey):  # while the key same as last key, count up crimes by type
+            crimes[crime] = crimes.get(crime,0) + 1 # add 1 to crimes dict ref'd for this crime type
+            lastkey = key 
+        else:                  # We've hit a condition where key changes, print results
+           
+            #mapred_shared.printout(str(key) + str(lastkey)) #DEBUG
+            if ":".join(lastkey) != "month:lsoa code":      # quick fix - ignore CSV headers                                                 
+                print_output(lastkey, crimes)
+                j += 1
+                if j == 1:        
+                    logging.info("| Second key-set (record %s) is %s", i, ":".join(key))
+        
     
             #reset crime counters before we move on to process with a new sub-key
-            crimes = init_crimes(crimes)
-            crimes[crime] = crimes.get(crime,0) + value # add "value" to crimes dict ref'd for this crime type
+            crimes = mapred_shared.init_crimes()
+            crimes[crime] = crimes.get(crime,0) + 1 # add "value" to crimes dict ref'd for this crime type
             
-            subkey = key[0:2]
+            lastkey = key
+            
     
     # when we hit the end of the file, print the summary for final sub-key
-    print_output(subkey, crimes)
+    if ":".join(lastkey) != "month:lsoa code":      # quick fix - ignore CSV headers
+        print_output(lastkey, crimes)
+        j += 1
     
-    log.write("\n----------------------------------")
+    #print_header(crimes)
+    
+    
 
 except Exception as err:
-    exc_info = sys.exc_info()
-    log.write("\n----------------------------------")
-    log.write("------Error Stack-----------")
-    log.write(err)
-    log.close()
     
-    raise exc_info[0], exc_info[1], exc_info[2]
+    logging.error("Error processing key %s ", ":".join(key))
+    
+    logging.error("---------Error Stack--------------")
+    logging.error('Failed with error:', exc_info=True)
+    logging.error("----------------------------------")
+    
+    raise
 
-log.close()
+logging.info("Processed %s lines, summarised to %s rows", i, j)
+logging.info("|")
+logging.info("| Final key is %s", ":".join(key))
+logging.info("|")
+logging.info("----------End    PID=%s-------------------", pid)   

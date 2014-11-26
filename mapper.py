@@ -3,7 +3,9 @@
 import sys
 import re
 import os
-import traceback
+import logging
+
+import mapred_shared
 
 
 """ Hadoop Mapper
@@ -14,42 +16,48 @@ Crime ID,Month,Reported by,Falls within,Longitude,Latitude,Location,LSOA code,LS
 ,2012-01,Avon and Somerset Constabulary,Avon and Somerset Constabulary,-2.510162,51.410998,On or near Monmouth Road,E01014399,Bath and North East Somerset 001A,Anti-social behaviour,,
 
 
-Eventual target is key-value summary where
-KEY = month:lsoa_code:crime
-VALUE = count (of crimes in the LSOA, for that month, of that type)
+target is key-value summary where
+KEY = month:lsoa_code
+VALUE = crime
 
-lsoa_code,       -- input field 8
-lsoa_name,       -- input field 9
-month,           -- input field 2  
-anti_social,       [1/0] -- derived from field 10  matches social 
-bicycle_theft,	   [1/0] -- derived from field 10  matches "Bicycle"
-burglary,   	   [1/0] -- derived from field 10  matches "Burglary"
-damage_or_arson,   [1/0] -- derived from field 10  matches "Criminal"
-drugs,   	[1/0] -- derived from field 10  matches "Drugs"
-other_theft,  	[1/0] -- derived from field 10  matches "Other" AND "Theft"
-weapons,   	[1/0] -- derived from field 10  matches "Weapons"
-public_order,   [1/0] -- derived from field 10  matches "Order" AND "Public"
-robbery,   	[1/0] -- derived from field 10  matches "Robbery"
-shoplifting,   	[1/0] -- derived from field 10  matches "Shoplifting
-theft_person,   [1/0] -- derived from field 10  matches "Theft" AND "Person"
-vehicle_crime,  [1/0] -- derived from field 10  matches "Vehicle"
-violence_sex,   [1/0] -- derived from field 10  matches "Sex"
-other_crime,   	[1/0] -- derived from field 10  matches "Other" AND "Crime"
+lsoa_code,      -- input FIELD 8
+month,          -- input FIELD 2  
+
+Use RegEx to match text in FIELD 10 and derive crime value:
+anti_social,    -- derived from field 10  matches social 
+bicycle_theft,	-- derived from field 10  matches "Bicycle"
+burglary,   	-- derived from field 10  matches "Burglary"
+damage_or_arson,-- derived from field 10  matches "Criminal"
+drugs,   	    -- derived from field 10  matches "Drugs"
+other_theft,  	-- derived from field 10  matches "Other" AND "Theft"
+weapons,   	    -- derived from field 10  matches "Weapons"
+public_order,   -- derived from field 10  matches "Order" AND "Public"
+robbery,   	    -- derived from field 10  matches "Robbery"
+shoplifting,   	-- derived from field 10  matches "Shoplifting
+theft_person,   -- derived from field 10  matches "Theft" AND "Person"
+vehicle_crime,  -- derived from field 10  matches "Vehicle"
+violence_sex,   -- derived from field 10  matches "Sex"
+other_crime,   	-- derived from field 10  matches "Other" AND "Crime"
 
 """
 
-def printv(text):
-    """
-    Very basic print-line for version 2 / 3 compatibility
-    """
-    text += "\n"
-    sys.stdout.write(text)
 
 ### Main ###
 
 pid = str(os.getpid())
-log = open("/tmp/mapper." + pid + ".log", "a")
-log.write("\n----------Start---------------------")
+i = 0
+missing = 0
+unclassified = 0
+
+# Logging #
+logging.basicConfig(filename='/tmp/mapper.log',
+                    level=logging.INFO, 
+                    format='%(asctime)s %(levelname)s %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S')
+
+logging.info("----------Start  PID=%s-------------------", pid)
+logging.info("|")
+###########
 
 try:
     year_flag = 0
@@ -60,13 +68,16 @@ try:
     
     
     for line in sys.stdin:
+        i += 1
         line = line.strip()
         unpacked = line.split(",")
         unpacked = [item.lower() for item in unpacked] # set all strings lowercase
+        if i == 1:
+            logging.info("| First line is %s", line)
         
-        month = str(unpacked[1])
+        date = str(unpacked[1])
         if year_flag == 1:                        #if the YEAR flag set, strip off month
-            month = month.split("-")[0] 
+            date = date.split("-")[0] 
     
         lsoa_code = str(unpacked[7])
         #lsoa_name = unpacked[8]
@@ -75,67 +86,68 @@ try:
     
         #if unpacked[9] includes "bicycle", bicycle_theft = 1
         if re.search("bicycle", crime_type,):
-            crime = "bicycle_theft"
+            crime = mapred_shared.crimes_list[0]
+        elif re.search("social", crime_type,):
+            crime = mapred_shared.crimes_list[1]
+        elif re.search("burglary", crime_type,): 
+            crime = mapred_shared.crimes_list[2]
+        elif re.search("criminal", crime_type,):
+            crime = "damage_or_arson"   
+        elif re.search("drugs", crime_type,):
+            crime = mapred_shared.crimes_list[3]
+        elif (re.search("other", crime_type,)) and  (re.search("theft", crime_type,)):
+            crime = mapred_shared.crimes_list[4]
+        elif re.search("weapons", crime_type,):
+            crime = mapred_shared.crimes_list[5]
+        elif (re.search("order", crime_type,)) and (re.search("public", crime_type,)):
+            crime = mapred_shared.crimes_list[6]
+        elif re.search("robbery", crime_type,):
+            crime = mapred_shared.crimes_list[7]
+        elif re.search("shoplifting", crime_type,):
+            crime = mapred_shared.crimes_list[8]
+        elif re.search("robbery", crime_type,):
+            crime = mapred_shared.crimes_list[9]
+        elif (re.search("theft", crime_type,)) and (re.search("person", crime_type,)) :
+            crime = mapred_shared.crimes_list[10]
+        elif re.search("vehicle", crime_type,):
+            crime = mapred_shared.crimes_list[11]
+        elif re.search("sex", crime_type,) :
+            crime = mapred_shared.crimes_list[12]
+        elif (re.search("other", crime_type,)) and (re.search("crime", crime_type,)) :
+            crime = mapred_shared.crimes_list[13]
+        else:
+            crime = mapred_shared.crimes_list[14]   # crime is "unclassified"
+            unclassified += 1
+            
+        if lsoa_code == "":
+            lsoa_code = "MISSING_DATA"                  #MISSING
+            crime = mapred_shared.crimes_list[14]  # Crime is "missing data"
+        if date == "":
+            date = "MISSING_DATA"                       #MISSING
+            crime = mapred_shared.crimes_list[14]  # Crime is "missing data"
+        if crime == mapred_shared.crimes_list[14]:
+            missing += 1
+        
+            
+        key = ":".join((date, lsoa_code))
+        value = crime
     
-        if re.search("social", crime_type,):
-            crime = "social"
-            
-        if re.search("burglary", crime_type,): 
-            crime = "burglary"
-            
-        if re.search("criminal", crime_type,):
-            crime = "damage_or_arson"
-            
-        if re.search("drugs", crime_type,):
-            crime = "drugs"
-            
-        if (re.search("other", crime_type,)) and  (re.search("theft", crime_type,)):
-            crime = "other_theft"
-            
-        if re.search("weapons", crime_type,):
-            crime = "weapons"
-            
-        if (re.search("order", crime_type,)) and (re.search("public", crime_type,)):
-            crime = "public_order"
-            
-        if re.search("robbery", crime_type,):
-            crime = "robbery"
-            
-        if re.search("shoplifting", crime_type,):
-            crime = "shoplifting"
-            
-        if (re.search("theft", crime_type,)) and (re.search("person", crime_type,)) :
-            crime = "theft_person"
-            
-        if re.search("vehicle", crime_type,):
-            crime = "vehicle_crime"
-    
-        if re.search("sex", crime_type,) :
-            crime = "violence_sex"
-      
-        if (re.search("other", crime_type,)) and (re.search("crime", crime_type,)) :
-            crime = "other_crime"
-            
-        if (lsoa_code != "") and (crime != "") :  # some data has no location - skip it
-            key = ":".join((month, lsoa_code, crime))
-            value = "1"
-    
-            printv(key + "\t" + value)
+        #printv(key + "\t" + value)
+        mapred_shared.printout(key + "\t" + value)
             
 except Exception as err:
-    exc_info = sys.exc_info()
-    log.write("\n---------Error Stack--------------\n")
     listlen = str(len(unpacked))
-    log.write("unpacked list is " + listlen + " long")
-    log.write("\nProcessing: " + str(line) + "\n")
-    errstring=err.message
-    errline=str(traceback.tb_lineno(sys.exc_info()[2]))
+    logging.error("Error processing line with %s fields: %s", str(listlen), str(line))
     
-    log.write(errstring + " at line " + errline)
-    log.write("\n----------------------------------\n")
-    log.close()
+    logging.error("---------Error Stack--------------")
+    logging.error('Failed with error:', exc_info=True)
+    logging.error("----------------------------------")
+    
+    raise
 
-    raise exc_info[0], exc_info[1], exc_info[2]
+logging.info("|")
+logging.info("Processed %s lines; %s missing data, %s unclassified crimes", i, missing, unclassified)
+logging.info("|")
+logging.info("| Final line is %s", line)
+logging.info("----------End    PID=%s-------------------", pid)   
 
-log.write("\n------------End---------------------\n")    
-log.close()
