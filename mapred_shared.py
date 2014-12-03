@@ -15,22 +15,22 @@ def printout(text):
     sys.stdout.write(text)
 
 #list of crime categories that the mapper can output
-crimes_list=("bicycle_theft",
-                   "social",
-                   "burglary",
-                   "damage_or_arson", 
-                   "drugs",
-                   "other_theft",
-                   "weapons",
-                   "public_order",
-                   "shoplifting", 
-                   "robbery", 
-                   "theft_person",
-                   "vehicle_crime",
-                   "violence_sex", 
-                   "other_crime",
-                   "unclassified",
-                   "missing_data")
+crimes_list=("bicycle_theft",       #0
+                   "social",        #1
+                   "burglary",      #2
+                   "damage_or_arson", #3
+                   "drugs",         #4
+                   "other_theft",   #5
+                   "weapons",       #6
+                   "public_order",  #7 
+                   "shoplifting",   #8 
+                   "robbery",       #9
+                   "theft_person",  #10
+                   "vehicle_crime", #11 
+                   "violence_sex",  #12
+                   "other_crime",   #13
+                   "unclassified",  #14
+                   "missing_data")  #15
 
     
 def init_crimes():
@@ -39,7 +39,7 @@ def init_crimes():
     """
     # Python 2.7 syntax: crimes = {crime:0 for crime in crimes_list}
     
-    # Python 2.6 Sytnax: 
+    # Python 2.6 Syntax: 
     crimes= {}
     for crime in crimes_list:
         crimes[crime] = 0
