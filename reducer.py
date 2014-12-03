@@ -79,9 +79,6 @@ crimes = mapred_shared.init_crimes()   # dictionary of crime-counts
 key = []
 lastkey = []
 
-#subkey = []  # split the key into month,lsoa parts as a "sub-key" 
-            
-      
 try:
 
     for line in sys.stdin:
