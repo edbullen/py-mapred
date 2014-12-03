@@ -12,13 +12,13 @@ Data in the Police Data files in this format:
 
 + Crime ID,Month,Reported by,Falls within,Longitude,Latitude,Location,LSOA code,LSOA name,Crime type,Last outcome category,Context
 + ,2012-01,Avon and Somerset Constabulary,Avon and Somerset Constabulary,-2.516919,51.423683,On or near A4175,E01014399,Bath and North East Somerset 001A,Anti-social behaviour,,
-+,2012-01,Avon and Somerset Constabulary,Avon and Somerset Constabulary,-2.510162,51.410998,On or near Monmouth Road,E01014399,Bath and North East Somerset 001A,Anti-social behaviour,,
-+ ...
-+ ...
++ ,2012-01,Avon and Somerset Constabulary,Avon and Somerset Constabulary,-2.510162,51.410998,On or near Monmouth Road,E01014399,Bath and North East Somerset 001A,Anti-social behaviour,,
++ ...etc...
++ ...etc...
 
 gets mapped to 
 
-| <YEAR-MON>:LSOA   | <tab> | <Crime-Class>
+| YEAR-MON:LSOA     | tab   | Crime-Class
 | ----------------- | ----- | --------------
 | 2012-01:e01029293 |       | damage_or_arson
 | 2012-01:e01029293 |       | drugs
