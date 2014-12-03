@@ -2,6 +2,7 @@
 
 #export INPUT_PATH='/user/oracle/police_data/2014-09*'
 #export OUTPUT_PATH='/user/oracle/crime_sum1'
+
 export STREAMJAR=/usr/lib/hadoop-mapreduce/hadoop-streaming.jar 
 
 export MAPPER="/media/sf_Python/mapred/mapper.py"
