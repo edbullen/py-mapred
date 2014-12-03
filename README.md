@@ -12,10 +12,10 @@ Data in the Police Data files in this format:
 
 + Crime ID,Month,Reported by,Falls within,Longitude,Latitude,Location,LSOA code,LSOA name,Crime type,Last outcome category,Context
 + ,2012-01,Avon and Somerset Constabulary,Avon and Somerset Constabulary,-2.516919,51.423683,On or near A4175,E01014399,Bath and North East Somerset 001A,Anti-social behaviour,,
-
 +,2012-01,Avon and Somerset Constabulary,Avon and Somerset Constabulary,-2.510162,51.410998,On or near Monmouth Road,E01014399,Bath and North East Somerset 001A,Anti-social behaviour,,
 + ...
 + ...
+
 gets mapped to 
 
 | <YEAR-MON>:LSOA   | <tab> | <Crime-Class>
@@ -48,6 +48,7 @@ Copy the files
 + mapper.py
 + mapred_shared.py
 + run_mapred.sh
+
 to an appropriate directory.
 
 I copied to /tmp as a quick hack; sub-dirs need to be created by Yarn from what I can see, so proper way to do this is put files in correct place in your Hadoop installation.
@@ -58,6 +59,6 @@ Execute the supplied "mapper.py" and "reducer.py" Python utilities via the Hadoo
 
 A supplied bash shell script can be used to call the mapper.py and reducer.py with correct Hadoop arguments with specificed source and dest Hadoop directories.
 
-NOTE: when using the "file" option for the input file spec, do not specific a directory; needs a wild-card spec for a set of files _in_ a directory.
+NOTE: when using the "file" option for the input file spec, do not specify a directory; needs a wild-card spec for a set of files _in_ a directory.
 
 
