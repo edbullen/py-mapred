@@ -26,19 +26,19 @@ http://opendatacommunities.org/data/postcodes
 
 This gets **mapped** to 
 
-| YEAR-MON:LSOA     | tab   | Crime-Class    | LSOA_Name
-| ----------------- | ----- | ---------------|----------
-| 2012-01:e01029293 |       | damage_or_arson| <LSOA name>
-| 2012-01:e01029293 |       | drugs          | <LSOA name>
-| 2012-01:e01029293 |       | drugs          | <LSOA name>
-| 2012-01:e01029293 |       | other_theft    | <LSOA name>
-| 2012-01:e01029293 |       | unclassified   | <LSOA name>
-| 2012-01:e01029293 |       | unclassified   | <LSOA name>
-| 2012-01:e01029293 |       | unclassified   | <LSOA name>
-| 2012-01:e01029293 |       | other_crime    | <LSOA name>
-| 2012-01:e01029266 |       | social         | <LSOA name>
-| 2012-01:e01029266 |       | damage_or_arson| <LSOA name>
-| 2012-01:e01029284 |       | social         | <LSOA name>
+| YEAR-MON:LSOA     | tab   | Crime-Class    | tab   | LSOA_Name
+| ----------------- | ----- | ---------------| ----- | ----------
+| 2012-01:e01029293 |       | damage_or_arson|       | LSOA Description
+| 2012-01:e01029293 |       | drugs          |       | LSOA Description
+| 2012-01:e01029293 |       | drugs          |       | LSOA Description
+| 2012-01:e01029293 |       | other_theft    |       | LSOA Description
+| 2012-01:e01029293 |       | unclassified   |       | LSOA Description
+| 2012-01:e01029293 |       | unclassified   |       | LSOA Description
+| 2012-01:e01029293 |       | unclassified   |       | LSOA Description
+| 2012-01:e01029293 |       | other_crime    |       | LSOA Description
+| 2012-01:e01029266 |       | social         |       | LSOA Description
+| 2012-01:e01029266 |       | damage_or_arson|       |LSOA Description
+| 2012-01:e01029284 |       | social         |       |LSOA Description
 
 then reduced to
 
@@ -46,7 +46,7 @@ Count up the crimes by class and summarise by the key:
 
 |DATE,   | LSOA     ,| LSOA_Name   | crime[0],| crime[1],| crime[2], |crime[3],|...|crime[n]|
 |--------|-----------|-------------|----------|----------|-----------|---------|---|--------|
-|2012-01,| e01029293,| <LSOA_Name>,|1        ,| 2       ,| 0       , |0   ,    |...| 4      |
+|2012-01,| e01029293,| LSOA Desc  ,|1        ,| 2       ,| 0       , |0   ,    |...| 4      |
 
 (see the definition of crime-types 0..n in the mapred_shared.py file; list def "crimes_list")
 
