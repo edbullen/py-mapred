@@ -109,7 +109,7 @@ Alternatively, script
 + cr_crime_sum_by_lsoa.sh
 can be executed to create a Hive table that maps to the output of the map-reduce job in a specified Hadoop dir.
 
-Example:
+* Example: *
 ./cr_crime_sum_by_lsoa.sh CRIME_SUM /user/oracle/crime_sum
 
 creates an Hive table "CRIME_SUM" mapped to the files in HDFS /user/oracle/crime_sum directory.
@@ -138,6 +138,11 @@ total_classified        int                     None
 Time taken: 1.093 seconds, Fetched: 20 row(s)
 hive>
 
+
+* Example: *
+./cr_crime_sum_by_lsoa.sh CRIME_SUMYR /user/oracle/crime_sum_year
+
+creates an Hive table "CRIME_SUMYR" mapped to the files in HDFS /user/oracle/crime_sum_year directory.
 
 
 
