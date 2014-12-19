@@ -16,13 +16,14 @@ if [ $# -ne 4 ]
 fi
 
 MAPPER=$1
+MAPPERFILE=`echo $1 | cut -d " " -f1` #if an arg was specificed, split it off
 REDUCER=$2
 INPUT_PATH=$3
 OUTPUT_PATH=$4
 
-printf "\nhadoop jar $STREAMJAR \n -file $MAPPER    -mapper python $MAPPER \n -file $REDUCER   -reducer python $REDUCER \n -input $INPUT_PATH -output $OUTPUT_PATH \n\n"
+printf "\nhadoop jar $STREAMJAR \n -file $MAPPERFILE    -mapper python $MAPPER \n -file $REDUCER   -reducer python $REDUCER \n -input $INPUT_PATH -output $OUTPUT_PATH \n\n"
 
 hadoop jar $STREAMJAR \
--file $MAPPER    -mapper "python $MAPPER" \
+-file $MAPPERFILE    -mapper "python $MAPPER" \
 -file $REDUCER   -reducer "python $REDUCER" \
 -input $INPUT_PATH -output $OUTPUT_PATH
