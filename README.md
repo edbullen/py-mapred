@@ -56,10 +56,13 @@ Copy the files
 + mapper.py
 + mapred_shared.py
 + run_mapred.sh
++ config.ini
 
 to an appropriate directory.
 
 I copied to /tmp as a quick hack; sub-dirs need to be created by Yarn, so ideally put files in correct place in your Hadoop installation.
+
+Edit the `config.ini` file and specify a location for the logfile for the Mapper and Reducer
 
 ##Execution
 
@@ -73,29 +76,29 @@ NOTE: when using the "file" option for the input file spec, do not specify a dir
 
 [oracle@bigdatalite mapred]$ ./run_mapred.sh /tmp/mapper.py /tmp/reducer.py /user/oracle/police_data/*.csv /user/oracle/crime_sum
 
-hadoop jar /usr/lib/hadoop-mapreduce/hadoop-streaming.jar
- -file /tmp/mapper.py    -mapper python /tmp/mapper.py
- -file /tmp/reducer.py   -reducer python /tmp/reducer.py
- -input /user/oracle/police_data/*.csv -output /user/oracle/crime_sum
+hadoop jar /usr/lib/hadoop-mapreduce/hadoop-streaming.jar  
+ -file /tmp/mapper.py    -mapper python /tmp/mapper.py  
+ -file /tmp/reducer.py   -reducer python /tmp/reducer.py  
+ -input /user/oracle/police_data/*.csv -output /user/oracle/crime_sum  
 
-14/12/08 05:33:35 WARN streaming.StreamJob: -file option is deprecated, please use generic option -files instead.
-packageJobJar: [/tmp/mapper.py, /tmp/reducer.py] [/usr/lib/hadoop-mapreduce/hadoop-streaming-2.3.0-cdh5.1.2.jar] /tmp/streamjob4885598677458329955.jar tmpDir=null
-14/12/08 05:33:36 INFO client.RMProxy: Connecting to ResourceManager at localhost/127.0.0.1:8032
-14/12/08 05:33:37 INFO client.RMProxy: Connecting to ResourceManager at localhost/127.0.0.1:8032
-...
-... etc
-14/12/08 07:16:26 INFO mapreduce.Job:  map 100% reduce 100%
-14/12/08 07:16:28 INFO mapreduce.Job: Job job_1417792229125_0001 completed successfully
-14/12/08 07:16:28 INFO mapreduce.Job: Counters: 49
-...
-...
-        File Output Format Counters
-                Bytes Written=79461938
-14/12/08 07:16:28 INFO streaming.StreamJob: Output directory: /user/oracle/crime_sum
+14/12/08 05:33:35 WARN streaming.StreamJob: -file option is deprecated, please use generic option -files instead.  
+packageJobJar: [/tmp/mapper.py, /tmp/reducer.py] [/usr/lib/hadoop-mapreduce/hadoop-streaming-2.3.0-cdh5.1.2.jar] /tmp/streamjob4885598677458329955.jar tmpDir=null  
+14/12/08 05:33:36 INFO client.RMProxy: Connecting to ResourceManager at localhost/127.0.0.1:8032  
+14/12/08 05:33:37 INFO client.RMProxy: Connecting to ResourceManager at localhost/127.0.0.1:8032  
+...  
+... etc  
+14/12/08 07:16:26 INFO mapreduce.Job:  map 100% reduce 100%  
+14/12/08 07:16:28 INFO mapreduce.Job: Job job_1417792229125_0001 completed successfully  
+14/12/08 07:16:28 INFO mapreduce.Job: Counters: 49  
+...  
+...  
+        File Output Format Counters  
+                Bytes Written=79461938  
+14/12/08 07:16:28 INFO streaming.StreamJob: Output directory: /user/oracle/crime_sum  
 
-###Example - create summary aggregated by YEAR not default month
-[oracle@bigdatalite mapred]$ ./run_mapred.sh "/tmp/mapper.py YEAR" /tmp/reducer.py /user/oracle/police_data/*.csv /user/oracle/crime_sum_year
-
+###Example - create summary aggregated by YEAR not default month  
+[oracle@bigdatalite mapred]$ ./run_mapred.sh "/tmp/mapper.py YEAR" /tmp/reducer.py /user/oracle/police_data/*.csv /user/oracle/crime_sum_year  
+  
 
 
 ##Setup Hive Table

@@ -6,8 +6,6 @@ import os
 
 import mapred_shared
 
-
-
 """ Hadoop Reducer
 Pipe in crime_data from Mapper in this fmt:
 2012-01:e01029293       damage_or_arson    bristol 001c
@@ -22,7 +20,7 @@ Pipe in crime_data from Mapper in this fmt:
 2012-01:e01029266       damage_or_arson    bristol 032f
 2012-01:e01029284       social     bristol 019a
 
-MAPPER is written so no ":" in free text ... we use this as a key sub-divide in
+MAPPER is written so that there is no ":" in free text ... we use this as a key sub-divide in
 REDUCER logic
 
 KEY = month:lsoa_code
@@ -64,7 +62,7 @@ def print_header(crimes):
     text += "total_crimes"
     print(text)    
 
-# pretty much a duplicate of  print_header ... tidy-up todo!
+# pretty much a duplicate of  print_header ... !
 def print_col_defs(crimes):
     text = "(date     STRING, \nlsoa    STRING,\nlsoa_name    STRING,\n"    
     for crime in sorted(crimes):
@@ -104,7 +102,7 @@ if len(sys.argv) == 2:
         print_col_defs(crimes)
 else:
     try:
-   
+        # read in line-by-line from STDIN
         for line in sys.stdin:
             i += 1
             line = line.strip()
@@ -135,7 +133,7 @@ else:
         
                 #reset crime counters before we move on to process with a new sub-key
                 crimes = mapred_shared.init_crimes()
-                crimes[crime] = crimes.get(crime,0) + 1 # add "value" to crimes dict ref'd for this crime type
+                crimes[crime] = crimes.get(crime,0) + 1 # add 1 to crime-count in crimes dict ref'd for this crime type
                 
                 lastkey = key
                 
