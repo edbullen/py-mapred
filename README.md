@@ -8,6 +8,8 @@ http://data.police.uk/data/
 
 CSV files are copied into a Hadoop FS directory (/user/oracle/police_data in this example)
 
+**Note** Only copy the *street.csv crimes, dont copy the stop-and-search.csv and outcomes.csv files.
+
 Data in the Police Data files in this format:
 
 + Crime ID,Month,Reported by,Falls within,Longitude,Latitude,Location,LSOA code,LSOA name,Crime type,Last outcome category,Context
