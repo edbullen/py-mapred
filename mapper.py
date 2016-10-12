@@ -9,7 +9,6 @@ import csv
 import mapred_shared
 
 
-
 """ Hadoop Mapper
 Pipe in crime_data from CSVs loaded into HDFS - ie
 $ head /media/sf_DataSets/data.police.uk/2012-01/2012-01-avon-and-somerset-street.csv
@@ -45,8 +44,10 @@ other_crime,   	-- derived from field 10  matches "Other" AND "Crime"
 
 """
 
-
 ### Main ###
+
+params = mapred_shared.getconfig("config.ini")
+logfile = params["Mapper"]["logfile"]
 
 pid = str(os.getpid())
 i = 0
@@ -56,7 +57,7 @@ lsoa_code = ""; last_lsoa = ""
 lsoa_name = ""
 
 # Logging #
-logging.basicConfig(filename='/tmp/mapper.log',
+logging.basicConfig(filename=logfile,
                     level=logging.INFO, 
                     format='%(asctime)s %(levelname)s %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S')
@@ -71,7 +72,6 @@ try:
         #Check for YEAR aggregation setting
         if sys.argv[1] == "YEAR":
             year_flag = 1
-    
     
     for line in sys.stdin:
         i += 1
@@ -95,9 +95,6 @@ try:
                     
         crime_type = unpacked[9]
         crime = ""
-    
-    
-
     
         #if unpacked[9] includes "bicycle", bicycle_theft = 1
         if re.search("bicycle", crime_type,):
@@ -140,7 +137,6 @@ try:
             crime = mapred_shared.crimes_list[14]  # Crime is "missing data"
         if crime == mapred_shared.crimes_list[14]:
             missing += 1
-        
             
         key = ":".join((date, lsoa_code))
         value = crime
@@ -149,7 +145,8 @@ try:
         #printv(key + "\t" + value)
         if not lsoa_name:
             lsoa_name = "NULL"
-        mapred_shared.printout(key + "\t" + value + "\t" + lsoa_name)
+        #mapred_shared.printout(key + "\t" + value + "\t" + lsoa_name)
+        print(key + "\t" + value + "\t" + lsoa_name)
             
 except Exception as err:
     listlen = str(len(unpacked))

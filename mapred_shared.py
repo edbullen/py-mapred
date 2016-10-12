@@ -7,12 +7,34 @@ Common functions for Python Hadoop Streaming API programs
 '''
 import sys
 
-def printout(text):
+if sys.version_info[0] < 3:
+    from ConfigParser import *  # Python 2
+else:
+    from configparser import *   # Python 3
+
+
+def getconfig(cname):   
     """
-    Very basic print-line for version 2 / 3 compatibility
+    Read the config file and populate a set of params.
     """
-    text += "\n"
-    sys.stdout.write(text)
+    Config = ConfigParser()
+    configSections = {}   #{main: {p1:val, p2:val,...] next: [p1:val, p2:val,...]}
+    
+    Config.read(cname)
+    for section in Config.sections():
+        params = {}
+        #configSections["section"] = section
+        options = Config.options(section)
+        for option in options:
+            try:
+                params[option] = Config.get(section,option)
+            except:
+                print("Error parsing config file: section {0}, option {1}".format(section, option))
+        configSections[section] = params
+        # add the params Dict to the configSections Dict
+   
+    return configSections
+
 
 #list of crime categories that the mapper can output
 crimes_list=("bicycle_theft",       #0

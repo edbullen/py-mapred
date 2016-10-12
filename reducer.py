@@ -34,7 +34,11 @@ DATE,    LSOA     , crime[0], crime[1], crime[2], crime[3]....crime[n]
 
 """
 
-def sum_crimes(crimes):  # sum all classified crimes
+params = mapred_shared.getconfig("config.ini")
+logfile = params["Reducer"]["logfile"]
+
+
+def sum_crimes(crimes):  # sum all classified crimes - "other" is included as classified
     s = 0
     for a in (crimes):
         if (a != "unclassified") and (a != "missing_data"):
@@ -50,15 +54,15 @@ def print_output(key, lsoa_name, crimes):
         text += ","   # add a comma separator
     text += str(s)
     text = text.strip(' \t\n\r')
-    mapred_shared.printout(",".join(key) + "," + lsoa_name + "," + text + ", ENDOFLINE")
+    print(",".join(key) + "," + lsoa_name + "," + text)
     
 def print_header(crimes):
     text = "date,lsoa,lsoa_name,"
     for crime in sorted(crimes):
         text += crime
         text += ","   # add a comma separator
-    text += "total_classified"
-    mapred_shared.printout(text)    
+    text += "total_crimes"
+    print(text)    
 
 # pretty much a duplicate of  print_header ... tidy-up todo!
 def print_col_defs(crimes):
@@ -67,7 +71,7 @@ def print_col_defs(crimes):
         text += crime
         text += "    INT,\n"   
     text += "total_classified    INT)"
-    mapred_shared.printout(text)
+    print(text)
 
 
 # Main #
@@ -85,7 +89,7 @@ lastkey = []
 
 
 # Logging #
-logging.basicConfig(filename='/tmp/reducer.log',
+logging.basicConfig(filename=logfile,
                     level=logging.INFO, 
                     format='%(asctime)s %(levelname)s %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S')
@@ -114,7 +118,7 @@ else:
             if not lastkey:         # if lastkey is null, initialise it
                 lastkey = key       # should only happen at start
         
-            # this IF-switch only works because Hadoop sorts map output by key before passing to reducer
+            # !! this IF-switch only works because Hadoop sorts map output by key before passing to reducer !!
             if "".join(key) == "".join(lastkey):  # while the key same as last key, count up crimes by type
                 crimes[crime] = crimes.get(crime,0) + 1 # add 1 to crimes dict ref'd for this crime type
                 lastkey = key

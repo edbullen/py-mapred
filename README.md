@@ -145,8 +145,3 @@ hive>
 creates an Hive table "CRIME_SUMYR" mapped to the files in HDFS /user/oracle/crime_sum_year directory.
 
 
-
-
-
-
-
