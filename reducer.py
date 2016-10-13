@@ -32,9 +32,9 @@ DATE,    LSOA     , crime[0], crime[1], crime[2], crime[3]....crime[n]
 
 """
 
-params = mapred_shared.getconfig("config.ini")
-logfile = params["Reducer"]["logfile"]
-
+#params = mapred_shared.getconfig("config.ini")  #backed out - complications with hadoop finding relative path
+#logfile = params["Reducer"]["logfile"]
+logfile = mapred_shared.REDLOG
 
 def sum_crimes(crimes):  # sum all classified crimes - "other" is included as classified
     s = 0
@@ -53,7 +53,8 @@ def print_output(key, lsoa_name, crimes):
     text += str(s)
     text = text.strip(' \t\n\r')
     print(",".join(key) + "," + lsoa_name + "," + text)
-    
+
+# Generate col heading text based on the crimes list in shared lib    
 def print_header(crimes):
     text = "date,lsoa,lsoa_name,"
     for crime in sorted(crimes):
@@ -62,8 +63,10 @@ def print_header(crimes):
     text += "total_crimes"
     print(text)    
 
-# pretty much a duplicate of  print_header ... !
+# Generate col def based on the crimes list in shared lib, useful for generating HIVE table mappings
+# pretty much a duplicate of  print_header ... 
 def print_col_defs(crimes):
+    
     text = "(date     STRING, \nlsoa    STRING,\nlsoa_name    STRING,\n"    
     for crime in sorted(crimes):
         text += crime
@@ -85,22 +88,23 @@ crimes = mapred_shared.init_crimes()   # dictionary of crime-counts for each typ
 key = []
 lastkey = []
 
-
-# Logging #
-logging.basicConfig(filename=logfile,
-                    level=logging.INFO, 
-                    format='%(asctime)s %(levelname)s %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S')
-
-logging.info("----------Start  PID=%s-------------------", pid)
-logging.info("|")
-
 if len(sys.argv) == 2:
     if sys.argv[1] == "print_header":
         print_header(crimes)
     elif sys.argv[1] == "print_cols":
         print_col_defs(crimes)
+    else:
+        print("unknown option - choose print_header or print_cols or pipe data to STDIN")
 else:
+
+    # Logging #
+    logging.basicConfig(filename=logfile,
+                    level=logging.INFO, 
+                    format='%(asctime)s %(levelname)s %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S')
+
+    logging.info("----------Start  PID=%s-------------------", pid)
+    logging.info("|")
     try:
         # read in line-by-line from STDIN
         for line in sys.stdin:

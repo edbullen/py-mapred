@@ -8,7 +8,6 @@ import csv
 
 import mapred_shared
 
-
 """ Hadoop Mapper
 Pipe in crime_data from CSVs loaded into HDFS - ie
 $ head /media/sf_DataSets/data.police.uk/2012-01/2012-01-avon-and-somerset-street.csv
@@ -46,8 +45,9 @@ other_crime,   	-- derived from field 10  matches "Other" AND "Crime"
 
 ### Main ###
 
-params = mapred_shared.getconfig("config.ini")
-logfile = params["Mapper"]["logfile"]
+#params = mapred_shared.getconfig("config.ini")  #backed out - complications with hadoop finding relative path
+#logfile = params["Mapper"]["logfile"]
+logfile = mapred_shared.MAPLOG
 
 pid = str(os.getpid())
 i = 0
@@ -72,25 +72,25 @@ try:
         #Check for YEAR aggregation setting
         if sys.argv[1] == "YEAR":
             year_flag = 1
-    
+            
+    # read in line-by-line from STDIN
     for line in sys.stdin:
         i += 1
         line = line.strip()
         
-        for row in csv.reader([line], skipinitialspace=True):
+        for row in csv.reader([line], skipinitialspace=True):   #skipinitialspace = ignore whitespace after delim
             unpacked = row
        
         #unpacked = line.split(",")
         unpacked = [item.lower() for item in unpacked] # set all strings lowercase
-        if i == 1:
-            logging.info("| First line is %s", line)
+        if i == 1 or i ==2:
+            logging.info("| Line %s", str(i) + " " + line)
         
         date = str(unpacked[1])
-        if year_flag == 1:                        #if the YEAR flag set, strip off month
+        if year_flag == 1:                        #if the YEAR flag set, strip off month (so we aggregate by year)
             date = date.split("-")[0] 
     
         lsoa_code = str(unpacked[7])
-        #if lsoa_code != last_lsoa:  # simple way to make sure lsoa_name is the same for all lsoa  
         lsoa_name = unpacked[8] # populate each time we start processing new LSOA
                     
         crime_type = unpacked[9]
@@ -142,10 +142,9 @@ try:
         value = crime
         last_lsoa = lsoa_code
     
-        #printv(key + "\t" + value)
         if not lsoa_name:
             lsoa_name = "NULL"
-        #mapred_shared.printout(key + "\t" + value + "\t" + lsoa_name)
+       
         print(key + "\t" + value + "\t" + lsoa_name)
             
 except Exception as err:
