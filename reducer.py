@@ -52,7 +52,7 @@ def print_output(key, lsoa_name, crimes):
         text += ","   # add a comma separator
     text += str(s)
     text = text.strip(' \t\n\r')
-    print(",".join(key) + "," + lsoa_name + "," + text)
+    print(",".join(key) + "," + lsoa_name + "," + text + ", ENDOFLINE") # add the end-of-line to fix HIVE ext table mapping quirk
 
 # Generate col heading text based on the crimes list in shared lib    
 def print_header(crimes):
